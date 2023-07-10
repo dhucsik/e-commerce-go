@@ -1,0 +1,63 @@
+version: "3.9"
+
+volumes:
+  data:
+
+services:
+  app:
+    build: ./backend
+    command: ./app
+    ports:
+      - "8586:8586"
+    volumes:
+      - .:/backend/src
+    environment:
+      - GONOSUMDB=off
+      - TZ=Asia/Almaty
+    env_file:
+      - backend/app.env
+    depends_on:
+      postgres:
+        condition: service_healthy  
+      email-service:
+        condition: service_started
+    networks:
+      - backend
+      
+  
+  email-service:
+    build: ./email-send
+    command: ./app
+    ports:
+      - "8082:8082"
+    volumes:
+      - .:/email-send/src
+    environment:
+      - GONOSUMDB=off
+      - TZ=Asia/Almaty
+    env_file:
+      - email-send/app.env
+    networks:
+      - backend
+
+        
+  postgres:
+    image: postgres:13.2-alpine
+    volumes:
+      - data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5436:5432
+    networks:
+      - backend
+    
+networks:
+  backend:

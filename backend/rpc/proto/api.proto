@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "email-send/proto";
+package proto;
+
+service MailService {
+    rpc MailSend(MailSendRequest) returns (Empty);
+}
+
+message MailSendRequest {
+    string receiver = 1;
+    string message = 2;
+}
+
+message Empty {}
